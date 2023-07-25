@@ -20,9 +20,9 @@ def crtdspf(srcfile, tgtlib, tgtfile):
     crtlib("BLD%d" % (tmp_id))
     subprocess.call(["system", "crtsrcpf", "FILE(BLD%d/BLD%d)" % (tmp_id, tmp_id), "RCDLEN(132)" ])
     subprocess.call(["system", "cpyfrmstmf", "FROMSTMF('%s')" % (sanitize_path(srcfile)), "TOMBR('/QSYS.LIB/BLD%d.LIB/BLD%d.FILE/BUILD.MBR')" % (tmp_id, tmp_id), "MBROPT(*ADD)"])
-    subprocess.call(["system", "crtdspf", "FILE(%s/%s)" % (tgtlib, tgtfile), "SRCFILE(BLD%d/BLD%d)" % (tmp_id, tmp_id), "SRCMBR(BUILD)"])
-    subprocess.call(["system", "dsplib", "BLD%d" % (tmp_id)])
+    ret = subprocess.call(["system", "crtdspf", "FILE(%s/%s)" % (tgtlib, tgtfile), "SRCFILE(BLD%d/BLD%d)" % (tmp_id, tmp_id), "SRCMBR(BUILD)"])
     dltlib("BLD%d" % (tmp_id))
+    return ret 
 
 def crtcmd(cmdname, tgtlib, tgtpgm, cmdspec):    
     tmp_id = random.randint(100000,999999)
@@ -30,13 +30,13 @@ def crtcmd(cmdname, tgtlib, tgtpgm, cmdspec):
     subprocess.call(["system", "crtsrcpf", "FILE(BLD%d/BLD%d)" % (tmp_id, tmp_id), "RCDLEN(132)" ])
     subprocess.call(["system", "cpyfrmstmf", "FROMSTMF('%s')" % (sanitize_path(cmdspec)), "TOMBR('/QSYS.LIB/BLD%d.LIB/BLD%d.FILE/BUILD.MBR')" % (tmp_id, tmp_id), "MBROPT(*ADD)"])
     subprocess.call(["system", "crtcmd", "CMD(%s/%s)" % (tgtlib, cmdname) , "SRCFILE(BLD%d/BLD%d)" % (tmp_id, tmp_id), "PGM(%s/%s)" % (tgtlib, tgtpgm), "SRCMBR(BUILD)"])
-    subprocess.call(["system", "dsplib", "BLD%d" % (tmp_id)])
     dltlib("BLD%d" % (tmp_id))
 
 
 
 def crtbndrpg(srcfile, tgtlib, tgtfile):
-    subprocess.call(['system', 'crtbndrpg', "SRCSTMF('%s')" % (sanitize_path(srcfile)), "PGM(%s/%s)" % (tgtlib, tgtfile)])
+    ret = subprocess.call(['system', 'crtbndrpg', "SRCSTMF('%s')" % (sanitize_path(srcfile)), "PGM(%s/%s)" % (tgtlib, tgtfile)])
+    return ret 
 
     
 
@@ -48,11 +48,15 @@ def perform_build(build_dict):
 
     if build_dict['dspf']:
         for dspf in build_dict['dspf']:
-            crtdspf(dspf, build_dict['target_library'], os.path.splitext(dspf)[0])
+            if crtdspf(dspf, build_dict['target_library'], os.path.splitext(dspf)[0]) != 0:
+                print("crtdspf failed - stopping build.")
+                return
 
     if build_dict['rpgle']:
         for rpgle in build_dict['rpgle']:
-            crtbndrpg(rpgle, build_dict['target_library'], os.path.splitext(rpgle)[0])
+            if crtbndrpg(rpgle, build_dict['target_library'], os.path.splitext(rpgle)[0]) != 0:
+                print('crtbndrpg failed - stopping build.')
+                return
 
     if build_dict['cmd']:
         for pgm in list(build_dict['cmd'].keys()):

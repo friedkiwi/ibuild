@@ -12,4 +12,9 @@ import yaml
 
 
 def main():
-    #
+    with open("ibuild.yaml") as f:
+        build_dict = yaml.load(f, Loader=yaml.FullLoader)
+        print(build_dict)
+
+if __name__ == "__main__":
+    main()

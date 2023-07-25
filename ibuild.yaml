@@ -1,7 +1,10 @@
 target_library: G6CTRL
-pf:
-- g6ux.pf
-rpgle:
-- g6ctrl.rpgle 
 dspf:
 - g6ux.dspf
+rpgle:
+- g6ctrl.rpgle
+cmd:
+  strg6ctrl:
+    pgm: g6ctrl 
+    lib: g6ctrl 
+    src: strg6ctrl.cmd
